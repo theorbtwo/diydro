@@ -20,17 +20,38 @@ bolt_hole_margin = 2;
 rack_section_bolt_d = 4;
 bolt_hole_with_margins = rack_section_bolt_d + 2 * bolt_hole_margin;
 
-// This is completely just a guess!  (And it's just a hair too high from a quick experiment, which is good enough.)
-rack_tooth_height = mm_per_tooth;
+// This is a guess, plus an experimentally determined fudge factor ... an actual formula
+// would probably be handy.
+rack_tooth_height = mm_per_tooth - 0.6;
 
 rack_thickness = rack_tooth_height + bolt_hole_with_margins;
 
-translate([mm_per_tooth/2, rack_thickness, material_height/2])
-    gear(mm_per_tooth = mm_per_tooth, thickness = material_height, hole_diameter=0, pressure_angle = pressure_angle);
+gear_teeth = 20;
+
+plastic_parts();
+translate([mm_per_tooth/2, rack_thickness + pitch_radius(mm_per_tooth = mm_per_tooth), 0]) 
+    color([0.5, 0.5, 0.5])
+        magnet_and_pin();
+
+module magnet_and_pin() {
+    magnet();
+    cylinder(d=3, h=3*material_height);
+}
+
+module plastic_parts() {
+    translate([mm_per_tooth/2, rack_thickness + pitch_radius(mm_per_tooth = mm_per_tooth), 0]) {
+        difference() {
+            translate([0, 0, material_height+0.001])
+                gear(mm_per_tooth = mm_per_tooth, thickness = material_height*2, hole_diameter=0, pressure_angle = pressure_angle);
+            magnet_and_pin();
+        }
+    }
+}
 
 
 // To fit onto an A4 sheet, longwise, with healthy margin for misalignment.
 //rack_width_appx = 295;
+// For easy visualization / demo.
 rack_width_appx=50;
 rack_num_teeth = floor(rack_width_appx / mm_per_tooth);
 rack_width = mm_per_tooth * rack_num_teeth;
@@ -38,6 +59,15 @@ rack_width = mm_per_tooth * rack_num_teeth;
 rack_section();
 translate([rack_width/2, 0, material_height])
     rack_section();
+
+module magnet() {
+    x=5;
+    y=5;
+    z=2;
+    translate([-x/2, -y/2, 0])
+  color([0.5, 0.5, 0.5])
+   cube([x, y, z]);
+}
 
 module rack_section() {
     rack_tooth_height = mm_per_tooth;
